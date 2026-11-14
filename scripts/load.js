@@ -2,6 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
+  maxRedirects: 0,
   stages: [
     { duration: '10s', target: 5 },
     { duration: '20s', target: 10 },
@@ -14,19 +15,13 @@ export const options = {
   },
 };
 
-const BASE_URL = 'https://test-api.k6.io';
+const BASE_URL = 'https://quickpizza.grafana.com';
 
 export default function () {
-  const list = http.get(`${BASE_URL}/public/crocodiles/`);
-  check(list, {
-    'list status is 200': (r) => r.status === 200,
+  const res = http.get(`${BASE_URL}/api/quotes`);
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'has quotes': (r) => Array.isArray(r.json().quotes) && r.json().quotes.length > 0,
   });
-
-  const one = http.get(`${BASE_URL}/public/crocodiles/1/`);
-  check(one, {
-    'detail status is 200': (r) => r.status === 200,
-    'detail has id 1': (r) => Number(r.json().id) === 1,
-  });
-
   sleep(1);
 }
